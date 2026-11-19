@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>음력 행사 달력</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F4ED; --surface:#FFFFFF; --ink:#1F1E1D; --muted:#6B6A64; --line:#E3E0D5;
+  --accent:#C96442; --accent-ink:#FFFFFF; --soft:#F0E6DC; --today:#1F1E1D;
+  --serif:"Noto Serif KR","Nanum Myeongjo",Georgia,serif;
+  --sans:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#262624; --surface:#30302E; --ink:#F2F0E8; --muted:#A9A79D; --line:#454540;
+    --accent:#D97757; --accent-ink:#1F1E1D; --soft:#3B332E; --today:#F2F0E8; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#262624; --surface:#30302E; --ink:#F2F0E8; --muted:#A9A79D; --line:#454540;
+  --accent:#D97757; --accent-ink:#1F1E1D; --soft:#3B332E; --today:#F2F0E8; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--sans);-webkit-text-size-adjust:100%}
+main{max-width:560px;margin:0 auto;padding:32px 20px 56px}
+h1{font:600 28px/1.35 var(--serif);letter-spacing:-.01em;margin:0 0 12px}
+h2{font:600 18px/1.4 var(--serif);margin:0 0 12px}
+p{margin:0}
+.lead{color:var(--muted);margin-bottom:24px}
+.primary{width:100%;min-height:56px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font:500 18px var(--sans);cursor:pointer;transition:transform .12s}
+.primary:active{transform:scale(.98)}
+.primary[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:20px}
+.msg{min-height:1.6em;margin-top:10px;color:var(--muted);font-size:15px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-head h2{margin:0}
+.nav{width:44px;height:44px;border:1px solid var(--line);border-radius:12px;background:transparent;font-size:18px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.dow{font-size:13px;color:var(--muted);padding:6px 0}
+.dow:first-child,.day.sun{color:var(--accent)}
+.day{position:relative;aspect-ratio:1/1.05;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:15px}
+.day.today{box-shadow:inset 0 0 0 1.5px var(--today)}
+.day.mark{background:var(--soft);font-weight:500}
+.day .dots{display:flex;gap:3px;margin-top:3px;height:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.dot.je{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.legend{display:flex;gap:16px;margin-top:12px;font-size:14px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+ul{list-style:none;margin:0;padding:0}
+li.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+li.item:first-child{border-top:0}
+.when{flex:1;min-width:0}
+.when b{font-weight:500;display:block}
+.when small{color:var(--muted);font-size:14px}
+.dday{font:600 15px var(--serif);color:var(--accent);white-space:nowrap}
+.empty{color:var(--muted);font-size:15px}
+form{display:grid;gap:12px}
+label{display:grid;gap:6px;font-size:14px;color:var(--muted)}
+input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{min-height:48px;border-radius:12px;border:1px solid var(--ink);background:transparent;cursor:pointer;padding:0 16px}
+.btn.fill{background:var(--ink);color:var(--bg)}
+.del{min-height:44px;min-width:44px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
+.note{margin-top:28px;font-size:13px;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){.primary{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>음력 날짜, 양력으로 바꿔 보지 않아도 돼요</h1>
+  <p class="lead">가족 생일과 제사를 음력으로 한 번만 저장하세요. 올해 양력 날짜는 달력에 표시해 드려요.</p>
+
+  <button class="primary" id="showBtn" aria-pressed="false">음력 행사 양력 달력에 표시</button>
+  <p class="msg" id="msg" role="status"></p>
+
+  <section class="card" aria-labelledby="calTitle">
+    <div class="cal-head">
+      <button class="nav" id="prev" aria-label="이전 달">‹</button>
+      <h2 id="calTitle"></h2>
+      <button class="nav" id="next" aria-label="다음 달">›</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="legend"><span><i class="dot"></i>생일</span><span><i class="dot je"></i>제사</span></div>
+  </section>
+
+  <section class="card" id="upcomingCard" hidden aria-labelledby="upTitle">
+    <h2 id="upTitle">다가오는 행사</h2>
+    <ul id="upcoming"></ul>
+  </section>
+
+  <section class="card" aria-labelledby="addTitle">
+    <h2 id="addTitle">음력 행사 저장</h2>
+    <form id="form">
+      <label>행사 이름
+        <input id="name" required maxlength="30" autocomplete="off">
+      </label>
+      <div class="row">
+        <label>구분
+          <select id="type"><option value="birthday">생일</option><option value="jesa">제사</option></select>
+        </label>
+        <label>음력 월
+          <select id="lm"></select>
+        </label>
+        <label>음력 일
+          <select id="ld"></select>
+        </label>
+      </div>
+      <button class="btn fill" type="submit">저장</button>
+    </form>
+  </section>
+
+  <section class="card" id="savedCard" aria-labelledby="savedTitle">
+    <h2 id="savedTitle">저장한 행사</h2>
+    <ul id="saved"></ul>
+  </section>
+
+  <section class="card" aria-labelledby="alarmTitle">
+    <h2 id="alarmTitle">알림</h2>
+    <form id="alarmForm">
+      <label>며칠 전에 알려드릴까요
+        <select id="lead">
+          <option value="0">당일</option><option value="1">1일 전</option>
+          <option value="3">3일 전</option><option value="7">7일 전</option>
+        </select>
+      </label>
+      <button class="btn" type="submit" id="alarmBtn">알림 켜기</button>
+    </form>
+    <p class="msg" id="alarmMsg" role="status"></p>
+  </section>
+
+  <p class="note">음력 계산은 브라우저에 들어 있는 달력을 사용하며 윤달은 포함하지 않아요. 저장한 행사는 이 기기의 브라우저에만 보관돼요. 알림은 이 페이지가 열려 있는 동안 브라우저 알림으로 보내요.</p>
+</main>
+
+<script>
+(function(){
+  var DOW=["일","월","화","수","목","금","토"];
+  var store={
+    get:function(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}},
+    set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  };
+  var events=store.get("lunar-events",[]);
+  var showMarks=false;
+  var now=new Date();
+  var view={y:now.getFullYear(),m:now.getMonth()};
+  var $=function(id){return document.getElementById(id)};
+
+  // 음력 계산
+  var fmt=new Intl.DateTimeFormat("en-u-ca-chinese",{month:"numeric",day:"numeric"});
+  var cache={};
+  function yearMap(y){
+    if(cache[y])return cache[y];
+    var map={};
+    for(var i=0;i<366;i++){
+      var dt=new Date(y,0,1+i,12);
+      if(dt.getFullYear()!==y)break;
+      var m=0,d=0,leap=false,parts=fmt.formatToParts(dt);
+      for(var j=0;j<parts.length;j++){
+        if(parts[j].type==="month"){leap=/\D/.test(parts[j].value);m=parseInt(parts[j].value,10)}
+        if(parts[j].type==="day")d=parseInt(parts[j].value,10);
+      }
+      if(leap)continue;
+      var k=m+"-"+d;(map[k]=map[k]||[]).push(dt);
+    }
+    return cache[y]=map;
+  }
+  function occurrences(ev,y){
+    var map=yearMap(y);
+    return map[ev.m+"-"+ev.d]||(ev.d===30?map[ev.m+"-29"]:null)||[];
+  }
+  function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
+  function label(dt){return (dt.getMonth()+1)+"월 "+dt.getDate()+"일 ("+DOW[dt.getDay()]+")"}
+  function ddayText(dt){
+    var t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12);
+    var n=Math.round((dt-t)/864e5);
+    return n===0?"오늘":"D-"+n;
+  }
+  function typeName(t){return t==="jesa"?"제사":"생일"}
+
+  // 달력 그리기
+  function renderCal(){
+    $("calTitle").textContent=view.y+"년 "+(view.m+1)+"월";
+    var g=$("grid");g.innerHTML="";
+    DOW.forEach(function(w){var c=document.createElement("div");c.className="dow";c.textContent=w;g.appendChild(c)});
+    var first=new Date(view.y,view.m,1,12).getDay();
+    var days=new Date(view.y,view.m+1,0).getDate();
+    for(var i=0;i<first;i++)g.appendChild(document.createElement("div"));
+    var marks={};
+    if(showMarks){
+      events.forEach(function(ev){
+        occurrences(ev,view.y).forEach(function(dt){
+          if(dt.getMonth()===view.m)(marks[dt.getDate()]=marks[dt.getDate()]||[]).push(ev);
+        });
+      });
+    }
+    for(var d=1;d<=days;d++){
+      var dt=new Date(view.y,view.m,d,12);
+      var c=document.createElement("div");
+      c.className="day"+(dt.getDay()===0?" sun":"")+(sameDay(dt,now)?" today":"");
+      c.appendChild(document.createTextNode(d));
+      var list=marks[d];
+      if(list){
+        c.classList.add("mark");
+        var dots=document.createElement("span");dots.className="dots";
+        list.slice(0,3).forEach(function(ev){var i=document.createElement("i");i.className="dot"+(ev.type==="jesa"?" je":"");dots.appendChild(i)});
+        c.appendChild(dots);
+        c.setAttribute("aria-label",d+"일 "+list.map(function(e){return e.name+" "+typeName(e.type)}).join(", "));
+      }
+      g.appendChild(c);
+    }
+  }
+
+  function renderUpcoming(){
+    var card=$("upcomingCard"),ul=$("upcoming");
+    ul.innerHTML="";
+    if(!showMarks||!events.length){card.hidden=true;return}
+    var t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12),all=[];
+    events.forEach(function(ev){
+      [now.getFullYear(),now.getFullYear()+1].forEach(function(y){
+        occurrences(ev,y).forEach(function(dt){if(dt>=t)all.push({ev:ev,dt:dt})});
+      });
+    });
+    all.sort(function(a,b){return a.dt-b.dt});
+    all.slice(0,5).forEach(function(o){
+      var li=document.createElement("li");li.className="item";
+      li.innerHTML='<div class="when"><b></b><small></small></div><span class="dday"></span>';
+      li.querySelector("b").textContent=o.ev.name;
+      li.querySelector("small").textContent=o.dt.getFullYear()+"년 "+label(o.dt)+" · "+typeName(o.ev.type)+" · 음력 "+o.ev.m+"월 "+o.ev.d+"일";
+      li.querySelector(".dday").textContent=ddayText(o.dt);
+      ul.appendChild(li);
+    });
+    card.hidden=false;
+  }
+
+  function renderSaved(){
+    var ul=$("saved");ul.innerHTML="";
+    if(!events.length){
+      var p=document.createElement("li");p.className="empty";p.textContent="아직 저장한 행사가 없어요. 위 양식에 이름과 음력 날짜를 입력해 저장하세요.";ul.appendChild(p);return;
+    }
+    events.forEach(function(ev){
+      var li=document.createElement("li");li.className="item";
+      li.innerHTML='<div class="when"><b></b><small></small></div><button class="del" type="button">삭제</button>';
+      li.querySelector("b").textContent=ev.name;
+      li.querySelector("small").textContent=typeName(ev.type)+" · 음력 "+ev.m+"월 "+ev.d+"일";
+      li.querySelector(".del").setAttribute("aria-label",ev.name+" 삭제");
+      li.querySelector(".del").onclick=function(){
+        events=events.filter(function(e){return e.id!==ev.id});
+        store.set("lunar-events",events);renderAll();
+      };
+      ul.appendChild(li);
+    });
+  }
+  function renderAll(){renderCal();renderUpcoming();renderSaved()}
+
+  // 선택 목록
+  for(var i=1;i<=12;i++)$("lm").add(new Option(i+"월",i));
+  for(var j=1;j<=30;j++)$("ld").add(new Option(j+"일",j));
+
+  // 표시 버튼
+  $("showBtn").onclick=function(){
+    if(!events.length){
+      $("msg").textContent="먼저 아래에서 음력 행사를 저장해 주세요.";
+      $("name").scrollIntoView({block:"center"});
+      $("name").focus();
+      return;
+    }
+    showMarks=!showMarks;
+    this.setAttribute("aria-pressed",String(showMarks));
+    this.textContent=showMarks?"양력 날짜 표시 중 (누르면 숨김)":"음력 행사 양력 달력에 표시";
+    $("msg").textContent=showMarks?"저장한 음력 행사를 양력 날짜로 바꿔 표시했어요.":"";
+    renderAll();
+  };
+  $("prev").onclick=function(){view.m--;if(view.m<0){view.m=11;view.y--}renderCal()};
+  $("next").onclick=function(){view.m++;if(view.m>11){view.m=0;view.y++}renderCal()};
+
+  // 저장
+  $("form").onsubmit=function(e){
+    e.preventDefault();
+    var name=$("name").value.trim();
+    if(!name)return;
+    events.push({id:Date.now().toString(36),name:name,type:$("type").value,m:+$("lm").value,d:+$("ld").value});
+    store.set("lunar-events",events);
+    $("name").value="";
+    $("msg").textContent="저장했어요. 위 버튼을 눌러 양력 날짜를 확인하세요.";
+    renderAll();
+  };
+
+  // 알림
+  $("lead").value=String(store.get("lunar-lead",1));
+  function alarmOn(){return store.get("lunar-alarm",false)&&"Notification" in window&&Notification.permission==="granted"}
+  function syncAlarmUI(){
+    $("alarmBtn").textContent=alarmOn()?"알림 설정 저장 (켜짐)":"알림 켜기";
+  }
+  $("alarmForm").onsubmit=function(e){
+    e.preventDefault();
+    store.set("lunar-lead",+$("lead").value);
+    if(!("Notification" in window)){$("alarmMsg").textContent="이 브라우저는 알림을 지원하지 않아요.";return}
+    Notification.requestPermission().then(function(p){
+      if(p==="granted"){store.set("lunar-alarm",true);$("alarmMsg").textContent="알림을 켰어요.";checkAlarms()}
+      else{store.set("lunar-alarm",false);$("alarmMsg").textContent="브라우저에서 알림이 허용되지 않았어요. 브라우저 설정에서 허용해 주세요."}
+      syncAlarmUI();
+    });
+  };
+  function checkAlarms(){
+    if(!alarmOn())return;
+    var lead=store.get("lunar-lead",1),done=store.get("lunar-notified",{}),n=new Date(),
+        t=new Date(n.getFullYear(),n.getMonth(),n.getDate(),12);
+    events.forEach(function(ev){
+      [n.getFullYear(),n.getFullYear()+1].forEach(function(y){
+        occurrences(ev,y).forEach(function(dt){
+          var diff=Math.round((dt-t)/864e5),key=ev.id+"|"+dt.toDateString()+"|"+lead;
+          if(diff===lead&&!done[key]){
+            try{new Notification(ev.name+" "+typeName(ev.type),{body:(lead===0?"오늘":lead+"일 후")+" · 양력 "+label(dt)})}catch(e){}
+            done[key]=1;
+          }
+        });
+      });
+    });
+    store.set("lunar-notified",done);
+  }
+  syncAlarmUI();checkAlarms();setInterval(checkAlarms,36e5);
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
