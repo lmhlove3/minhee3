@@ -54,7 +54,8 @@ button,select,input{font:inherit;color:inherit}
 .day .dots{display:flex;gap:3px;margin-top:3px;height:7px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
 .dot.je{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
-.legend{display:flex;gap:16px;margin-top:12px;font-size:14px;color:var(--muted)}
+.dot.an{background:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:14px;color:var(--muted)}
 .legend span{display:flex;align-items:center;gap:6px}
 ul{list-style:none;margin:0;padding:0}
 li.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
@@ -73,6 +74,13 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 .del{min-height:44px;min-width:44px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
 .note{margin-top:28px;font-size:13px;color:var(--muted)}
 .hint{font-size:13px;color:var(--muted)}
+:root{--holiday:#D92D20}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--holiday:#FF8A80}}
+:root[data-theme="dark"]{--holiday:#FF8A80}
+.day{line-height:1.25}
+.day.hday{color:var(--holiday);font-weight:500}
+.hol{font-size:clamp(8px,2.6vw,10.5px);line-height:1.1;margin-top:1px;max-width:100%;white-space:nowrap;overflow:hidden}
+.dot.hd{background:var(--holiday)}
 .wx{font-size:14px;color:var(--muted);margin-bottom:10px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.primary{transition:none}}
@@ -80,8 +88,8 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 </head>
 <body>
 <main>
-  <h1>음력 날짜, 양력으로 바꿔 보지 않아도 돼요</h1>
-  <p class="lead">가족 생일과 제사를 음력으로 한 번만 저장하세요. 올해 양력 날짜는 달력에 표시해 드려요.</p>
+  <h1>까먹어도 괜찮아요, 제가 챙겨요</h1>
+  <p class="lead">생일, 제사, 가족 행사를 음력으로 한 번만 적어 두세요. 올해 양력 날짜는 제가 달력에 표시해 드려요.</p>
 
   <button class="primary" id="showBtn" aria-pressed="false">음력 행사 양력 달력에 표시</button>
   <p class="msg" id="msg" role="status"></p>
@@ -94,7 +102,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       <button class="nav" id="next" aria-label="다음 달">›</button>
     </div>
     <div class="grid" id="grid"></div>
-    <div class="legend"><span><i class="dot"></i>생일</span><span><i class="dot je"></i>제사</span></div>
+    <div class="legend"><span><i class="dot"></i>생일</span><span><i class="dot je"></i>제사</span><span><i class="dot an"></i>결혼기념일</span><span><i class="dot hd"></i>공휴일(빨간 날짜)</span></div>
   </section>
 
   <section class="card" id="upcomingCard" hidden aria-labelledby="upTitle">
@@ -110,7 +118,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       </label>
       <div class="row">
         <label>구분
-          <select id="type"><option value="birthday">생일</option><option value="jesa">제사</option></select>
+          <select id="type"><option value="birthday">생일</option><option value="jesa">제사</option><option value="anniv">결혼기념일</option></select>
         </label>
         <label>음력 월
           <select id="lm"></select>
@@ -164,7 +172,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     <p class="hint">입력한 이름과 생일은 작업 문의를 확인하기 위해 서버에 저장돼요.</p>
   </section>
 
-  <p class="note">음력 계산은 브라우저에 들어 있는 달력을 사용하며 윤달은 포함하지 않아요. 저장한 행사는 이 기기의 브라우저에만 보관돼요. 알림은 이 페이지가 열려 있는 동안 브라우저 알림으로 보내요.</p>
+  <p class="note">음력 계산은 브라우저에 들어 있는 달력을 사용하며 윤달은 포함하지 않아요. 공휴일은 2026년 기준 규정으로 계산하고 대체공휴일도 반영하지만, 정부가 새로 지정하는 임시공휴일은 빠질 수 있어요. 저장한 행사는 이 기기의 브라우저에만 보관돼요. 알림은 이 페이지가 열려 있는 동안 브라우저 알림으로 보내요.</p>
 </main>
 
 <script>
@@ -210,7 +218,55 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     var n=Math.round((dt-t)/864e5);
     return n===0?"오늘":"D-"+n;
   }
-  function typeName(t){return t==="jesa"?"제사":"생일"}
+  function typeName(t){return t==="jesa"?"제사":t==="anniv"?"결혼기념일":"생일"}
+
+  // 한국 공휴일 (관공서의 공휴일에 관한 규정 기준, 대체공휴일 포함)
+  var hCache={};
+  function holidayMap(y){
+    if(hCache[y])return hCache[y];
+    var by={};
+    function mk(yy,m,d){return new Date(yy,m-1,d,12)}
+    function k(dt){return dt.getFullYear()+"-"+(dt.getMonth()+1)+"-"+dt.getDate()}
+    function put(dt,name){var key=k(dt);(by[key]=by[key]||[]).push(name)}
+    function nextDay(dt){return new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()+1,12)}
+    var fixed=[[1,1,"신정",0],[3,1,"삼일절",1],[5,5,"어린이날",1],[6,6,"현충일",0],[8,15,"광복절",1],[10,3,"개천절",1],[10,9,"한글날",1],[12,25,"성탄절",1]];
+    if(y>=2026)fixed.push([5,1,"노동절",1],[7,17,"제헌절",1]);
+    var elig=[];
+    fixed.forEach(function(f){var dt=mk(y,f[0],f[1]);put(dt,f[2]);if(f[3])elig.push(dt)});
+    var map=yearMap(y),b=map["4-8"];
+    if(b&&b[0]){put(b[0],"부처님");elig.push(b[0])}
+    var blocks=[];
+    [["1-1","설날","설연휴"],["8-15","추석","추석연휴"]].forEach(function(c){
+      var a=map[c[0]];
+      if(a&&a[0]){
+        var dt=a[0],pv=new Date(y,dt.getMonth(),dt.getDate()-1,12),nx=nextDay(dt);
+        put(pv,c[2]);put(dt,c[1]);put(nx,c[2]);blocks.push([pv,dt,nx]);
+      }
+    });
+    var temp={"2026-6-3":"선거일"};
+    Object.keys(temp).forEach(function(key){
+      if(key.indexOf(y+"-")===0){var q=key.split("-");put(mk(y,+q[1],+q[2]),temp[key])}
+    });
+    var subs=[],seen={};
+    elig.forEach(function(dt){
+      var key=k(dt);
+      if(seen[key])return;
+      if(dt.getDay()===0||dt.getDay()===6||by[key].length>1){seen[key]=1;subs.push(dt)}
+    });
+    blocks.forEach(function(bl){
+      var hit=bl.some(function(dt){return dt.getDay()===0||by[k(dt)].length>1});
+      if(hit)subs.push(bl[2]);
+    });
+    subs.sort(function(a,b){return a-b});
+    subs.forEach(function(dt){
+      var d=nextDay(dt);
+      while(d.getDay()===0||by[k(d)])d=nextDay(d);
+      put(d,"대체휴일");
+    });
+    var out={};
+    Object.keys(by).forEach(function(key){out[key]=by[key][0]});
+    return hCache[y]=out;
+  }
 
   // 달력 그리기
   function renderCal(){
@@ -220,7 +276,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     var first=new Date(view.y,view.m,1,12).getDay();
     var days=new Date(view.y,view.m+1,0).getDate();
     for(var i=0;i<first;i++)g.appendChild(document.createElement("div"));
-    var marks={};
+    var marks={},hol=holidayMap(view.y);
     if(showMarks){
       events.forEach(function(ev){
         occurrences(ev,view.y).forEach(function(dt){
@@ -233,14 +289,17 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       var c=document.createElement("div");
       c.className="day"+(dt.getDay()===0?" sun":"")+(sameDay(dt,now)?" today":"");
       c.appendChild(document.createTextNode(d));
+      var hn=hol[view.y+"-"+(view.m+1)+"-"+d];
+      if(hn){c.classList.add("hday");var hs=document.createElement("span");hs.className="hol";hs.textContent=hn;c.appendChild(hs)}
       var list=marks[d];
       if(list){
         c.classList.add("mark");
         var dots=document.createElement("span");dots.className="dots";
-        list.slice(0,3).forEach(function(ev){var i=document.createElement("i");i.className="dot"+(ev.type==="jesa"?" je":"");dots.appendChild(i)});
+        list.slice(0,3).forEach(function(ev){var i=document.createElement("i");i.className="dot"+(ev.type==="jesa"?" je":ev.type==="anniv"?" an":"");dots.appendChild(i)});
         c.appendChild(dots);
-        c.setAttribute("aria-label",d+"일 "+list.map(function(e){return e.name+" "+typeName(e.type)}).join(", "));
+        c.setAttribute("aria-label",d+"일 "+(hn?hn+" ":"")+list.map(function(e){return e.name+" "+typeName(e.type)}).join(", "));
       }
+      if(hn&&!list)c.setAttribute("aria-label",d+"일 "+hn);
       g.appendChild(c);
     }
   }
