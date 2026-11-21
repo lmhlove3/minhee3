@@ -72,6 +72,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 .btn.fill{background:var(--ink);color:var(--bg)}
 .del{min-height:44px;min-width:44px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
 .note{margin-top:28px;font-size:13px;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.primary{transition:none}}
 </style>
@@ -137,6 +138,28 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       <button class="btn" type="submit" id="alarmBtn">알림 켜기</button>
     </form>
     <p class="msg" id="alarmMsg" role="status"></p>
+  </section>
+
+  <section class="card" aria-labelledby="iqTitle">
+    <h2 id="iqTitle">작업 문의</h2>
+    <form id="iqForm">
+      <label>이름
+        <input id="iqName" required maxlength="50" autocomplete="name">
+      </label>
+      <label>생일
+        <input id="iqBirthday" type="date" required>
+      </label>
+      <label>양력인지 음력인지
+        <select id="iqCal" required>
+          <option value="">선택해 주세요</option>
+          <option value="solar">양력</option>
+          <option value="lunar">음력</option>
+        </select>
+      </label>
+      <button class="btn fill" type="submit" id="iqBtn">문의 보내기</button>
+    </form>
+    <p class="msg" id="iqMsg" role="status"></p>
+    <p class="hint">입력한 이름과 생일은 작업 문의를 확인하기 위해 서버에 저장돼요.</p>
   </section>
 
   <p class="note">음력 계산은 브라우저에 들어 있는 달력을 사용하며 윤달은 포함하지 않아요. 저장한 행사는 이 기기의 브라우저에만 보관돼요. 알림은 이 페이지가 열려 있는 동안 브라우저 알림으로 보내요.</p>
@@ -329,6 +352,30 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     store.set("lunar-notified",done);
   }
   syncAlarmUI();checkAlarms();setInterval(checkAlarms,36e5);
+
+  // 작업 문의: Supabase에 저장만 함 (읽기 권한 없음)
+  var SB_URL="https://slrtdibjcezyblcvbvqm.supabase.co";
+  var SB_KEY="sb_publishable__yY_zv-ihR33SIKsicJqtQ_Aual6BLy";
+  var today=new Date(),pad=function(n){return (n<10?"0":"")+n};
+  $("iqBirthday").max=today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+  $("iqForm").onsubmit=function(e){
+    e.preventDefault();
+    var name=$("iqName").value.trim(),birthday=$("iqBirthday").value,cal=$("iqCal").value,btn=$("iqBtn");
+    if(!name||!birthday||!cal){$("iqMsg").textContent="세 칸을 모두 채워 주세요.";return}
+    btn.disabled=true;$("iqMsg").textContent="보내는 중이에요…";
+    fetch(SB_URL+"/rest/v1/inquiries",{
+      method:"POST",
+      headers:{"apikey":SB_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},
+      body:JSON.stringify({name:name,birthday:birthday,calendar_type:cal})
+    }).then(function(r){
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      $("iqForm").reset();
+      $("iqMsg").textContent="문의가 접수됐어요. 고맙습니다.";
+    }).catch(function(err){
+      console.error(err);
+      $("iqMsg").textContent="문의를 보내지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+    }).then(function(){btn.disabled=false});
+  };
 
   renderAll();
 })();
