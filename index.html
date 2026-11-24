@@ -446,7 +446,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       li.querySelector(".date").textContent=typeName(ev.type)+" · "+dateText(ev)+yr;
       var nx=nextOcc(ev),mt=li.querySelector(".meta"),nt=li.querySelector(".next");
       if(nx){
-        nt.textContent="다음: "+nx.getFullYear()+"년 "+label(nx)+" · "+ddayText(nx).replace("-","\u2011");
+        nt.textContent="다음: 양력 "+nx.getFullYear()+"년 "+label(nx)+" · "+ddayText(nx).replace("-","\u2011");
         var at=ageText(ev,nx);
         if(at)mt.textContent=at;
         else if(ev.type!=="jesa"&&!ev.year){mt.textContent=(ev.type==="anniv"?"결혼한 해":"태어난 해")+"를 넣으면 "+(ev.type==="anniv"?"몇 주년":"몇 세")+"인지 나와요";mt.style.color="var(--muted)";mt.style.fontWeight="400"}
