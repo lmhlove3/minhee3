@@ -84,8 +84,16 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 .dot.hd{background:var(--holiday)}
 .stks{order:-1;display:flex;gap:1px;align-items:center;justify-content:center;height:14px}
 .stk{display:inline-block;font-size:clamp(10px,3vw,14px);line-height:1}
-.stk:nth-child(1){transform:rotate(-8deg)}
-.stk:nth-child(2){transform:rotate(8deg)}
+.stk{--r:0deg;transform:rotate(var(--r))}
+.stk:nth-child(1){--r:-8deg}
+.stk:nth-child(2){--r:8deg}
+@keyframes hop{0%,60%,100%{transform:translateY(0) rotate(var(--r))}30%{transform:translateY(-3px) rotate(var(--r))}45%{transform:translateY(0) rotate(var(--r))}}
+@keyframes flick{0%,100%{opacity:1;transform:scale(1) rotate(var(--r))}25%{opacity:.7;transform:scale(.94) rotate(calc(var(--r) - 4deg))}50%{opacity:1;transform:scale(1.04) rotate(calc(var(--r) + 3deg))}75%{opacity:.8;transform:scale(.96) rotate(calc(var(--r) - 2deg))}}
+@keyframes beat{0%,100%{transform:scale(1) rotate(var(--r))}20%{transform:scale(1.25) rotate(var(--r))}40%{transform:scale(1) rotate(var(--r))}}
+.stk.birthday{animation:hop 2.4s ease-in-out infinite}
+.stk.jesa{animation:flick 2.2s ease-in-out infinite}
+.stk.anniv{animation:beat 1.8s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.stk,.stk.birthday,.stk.jesa,.stk.anniv{animation:none!important}}
 .stk-more{font-size:9px;color:var(--muted)}
 .wx{font-size:14px;color:var(--muted);margin-bottom:10px}
 .btns{display:flex;gap:10px}
@@ -379,7 +387,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       if(list){
         c.classList.add("mark");
         var stk=document.createElement("span");stk.className="stks";
-        list.slice(0,2).forEach(function(ev){var st=document.createElement("span");st.className="stk";st.textContent=STK[ev.type]||STK.birthday;stk.appendChild(st)});
+        list.slice(0,2).forEach(function(ev){var st=document.createElement("span");st.className="stk "+(ev.type||"birthday");st.textContent=STK[ev.type]||STK.birthday;stk.appendChild(st)});
         if(list.length>2){var more=document.createElement("span");more.className="stk-more";more.textContent="+"+(list.length-2);stk.appendChild(more)}
         c.appendChild(stk);
         list.slice(0,2).forEach(function(ev){var en=document.createElement("span");en.className="evn";en.textContent=ev.name;c.appendChild(en)});
