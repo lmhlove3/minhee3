@@ -32,6 +32,13 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--sans);-webkit-text-size-adjust:100%}
 main{max-width:560px;margin:0 auto;padding:32px 20px 56px}
+.ttl{word-break:keep-all}
+.ttl .w{display:inline-block;white-space:nowrap}
+.ttl .ch{display:inline-block;opacity:0;transform:translateY(.5em);animation:chUp .6s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(var(--i)*.07s + .15s)}
+.ttl .hl .ch{animation:chUp .6s cubic-bezier(.2,.7,.2,1) forwards,chHl .9s ease forwards;animation-delay:calc(var(--i)*.07s + .15s),1.5s}
+@keyframes chUp{to{opacity:1;transform:none}}
+@keyframes chHl{to{color:#c2562a}}
+@media (prefers-reduced-motion:reduce){.ttl .ch,.ttl .hl .ch{animation:none!important;opacity:1;transform:none}.ttl .hl .ch{color:#c2562a}}
 h1{font:600 28px/1.35 var(--serif);letter-spacing:-.01em;margin:0 0 12px}
 h2{font:600 18px/1.4 var(--serif);margin:0 0 12px}
 p{margin:0}
@@ -122,7 +129,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 </head>
 <body>
 <main>
-  <h1>까먹어도 괜찮아요, 제가 챙겨요</h1>
+  <h1 class="ttl" aria-label="까먹어도 괜찮아요, 제가 챙겨요"><span class="w"><span class="ch" style="--i:0">까</span><span class="ch" style="--i:1">먹</span><span class="ch" style="--i:2">어</span><span class="ch" style="--i:3">도</span></span> <span class="w"><span class="ch" style="--i:4">괜</span><span class="ch" style="--i:5">찮</span><span class="ch" style="--i:6">아</span><span class="ch" style="--i:7">요</span><span class="ch" style="--i:8">,</span></span> <span class="w hl"><span class="ch" style="--i:9">제</span><span class="ch" style="--i:10">가</span></span> <span class="w hl"><span class="ch" style="--i:11">챙</span><span class="ch" style="--i:12">겨</span><span class="ch" style="--i:13">요</span></span></h1>
   <p class="lead">생일, 제사, 가족 행사를 양력이든 음력이든 한 번만 적어 두세요. 양력 달력에 표시하고, 음력 날짜도 작게 같이 보여 드려요.</p>
 
   <section class="card" aria-labelledby="calTitle">
@@ -204,7 +211,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   </section>
 
   <section class="card" aria-labelledby="iqTitle">
-    <h2 id="iqTitle">작업 문의</h2>
+    <h2 id="iqTitle">달력에 행사 추가 부탁해!</h2>
     <form id="iqForm">
       <label>이름
         <input id="iqName" required maxlength="50" autocomplete="name">
