@@ -124,7 +124,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   </section>
 
   <section class="card" id="formCard" aria-labelledby="addTitle">
-    <h2 id="addTitle">음력 행사 저장</h2>
+    <h2 id="addTitle">행사 저장</h2>
     <form id="form">
       <label>행사 이름
         <input id="name" required maxlength="30" autocomplete="off">
@@ -433,7 +433,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   function endEdit(){
     editingId=null;
     $("form").reset();syncYearField();
-    $("addTitle").textContent="음력 행사 저장";
+    $("addTitle").textContent="행사 저장";
     $("formBtn").textContent="저장";
     $("cancelEdit").hidden=true;
     $("formCard").classList.remove("is-editing");
@@ -443,7 +443,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     $("name").value=ev.name;$("type").value=ev.type;$("lm").value=ev.m;$("ld").value=ev.d;
     $("evYear").value=ev.year||"";$("evMemo").value=ev.memo||"";
     syncYearField();
-    $("addTitle").textContent="음력 행사 수정";
+    $("addTitle").textContent="행사 수정";
     $("formBtn").textContent="수정 저장";
     $("cancelEdit").hidden=false;
     $("formCard").classList.add("is-editing");
