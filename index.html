@@ -431,8 +431,12 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     if(!events.length){
       var p=document.createElement("li");p.className="empty";p.textContent="아직 저장한 행사가 없어요. 위 양식에 이름과 날짜를 입력해 저장하세요.";ul.appendChild(p);return;
     }
+    function solarKey(ev){
+      var o=nextOcc(ev);
+      return o?(o.getMonth()+1)*100+o.getDate():ev.m*100+ev.d;
+    }
     var sorted=events.slice().sort(function(a,b){
-      return a.m-b.m||a.d-b.d||((a.cal==="solar"?0:1)-(b.cal==="solar"?0:1))||String(a.name).localeCompare(String(b.name),"ko");
+      return solarKey(a)-solarKey(b)||((a.cal==="solar"?0:1)-(b.cal==="solar"?0:1))||String(a.name).localeCompare(String(b.name),"ko");
     });
     sorted.forEach(function(ev){
       var li=document.createElement("li");li.className="item";
