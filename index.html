@@ -46,7 +46,7 @@ button,select,input{font:inherit;color:inherit}
 .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .cal-head h2{margin:0}
 .nav{width:44px;height:44px;border:1px solid var(--line);border-radius:12px;background:transparent;font-size:18px;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;text-align:center}
 .dow{font-size:13px;color:var(--muted);padding:6px 0}
 .dow:first-child,.day.sun{color:var(--accent)}
 .day{position:relative;aspect-ratio:1/1.05;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:15px}
@@ -94,8 +94,11 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 .edit{min-height:44px;min-width:44px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);cursor:pointer}
 .when small.meta{display:block;color:var(--accent);font-weight:500}
 .when small.memo{display:block;overflow-wrap:anywhere}
+.when small.date,.when small.next{display:block}
 .is-editing{border-color:var(--accent)}
 .row.two{grid-template-columns:1fr 1fr}
+.evn{font-size:clamp(8px,2.4vw,10px);line-height:1.15;color:var(--accent);font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px;margin-top:1px}
+.dday.past{color:var(--muted)}
 #evYear{-moz-appearance:textfield;appearance:textfield}
 #evYear::-webkit-outer-spin-button,#evYear::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .day{aspect-ratio:auto;min-height:64px;padding:2px 0}
@@ -108,9 +111,6 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 <main>
   <h1>까먹어도 괜찮아요, 제가 챙겨요</h1>
   <p class="lead">생일, 제사, 가족 행사를 양력이든 음력이든 한 번만 적어 두세요. 양력 달력에 표시하고, 음력 날짜도 작게 같이 보여 드려요.</p>
-
-  <button class="primary" id="showBtn" aria-pressed="false">저장한 행사 달력에 표시</button>
-  <p class="msg" id="msg" role="status"></p>
 
   <section class="card" aria-labelledby="calTitle">
     <p class="wx" id="wx" hidden></p>
@@ -159,6 +159,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
         <button class="btn" type="button" id="cancelEdit" hidden>수정 취소</button>
       </div>
     </form>
+    <p class="msg" id="msg" role="status"></p>
   </section>
 
   <section class="card" id="savedCard" aria-labelledby="savedTitle">
@@ -223,7 +224,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
   };
   var events=store.get("lunar-events",[]);
-  var showMarks=false;
+  var showMarks=true;
   var now=new Date();
   var view={y:now.getFullYear(),m:now.getMonth()};
   var $=function(id){return document.getElementById(id)};
@@ -271,7 +272,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   function ddayText(dt){
     var t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12);
     var n=Math.round((dt-t)/864e5);
-    return n===0?"오늘":"D-"+n;
+    return n===0?"오늘":(n>0?"D-"+n:"D+"+(-n));
   }
   var fmtY=new Intl.DateTimeFormat("en-u-ca-chinese",{year:"numeric"});
   function lunarYear(dt){
@@ -369,6 +370,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
         list.slice(0,2).forEach(function(ev){var st=document.createElement("span");st.className="stk";st.textContent=STK[ev.type]||STK.birthday;stk.appendChild(st)});
         if(list.length>2){var more=document.createElement("span");more.className="stk-more";more.textContent="+"+(list.length-2);stk.appendChild(more)}
         c.appendChild(stk);
+        list.slice(0,2).forEach(function(ev){var en=document.createElement("span");en.className="evn";en.textContent=ev.name;c.appendChild(en)});
         c.setAttribute("aria-label",d+"일 "+(hn?hn+" ":"")+list.map(function(e){return e.name+" "+typeName(e.type)}).join(", "));
       }
       if(hn&&!list)c.setAttribute("aria-label",d+"일 "+hn);
@@ -379,15 +381,17 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   function renderUpcoming(){
     var card=$("upcomingCard"),ul=$("upcoming");
     ul.innerHTML="";
-    if(!showMarks||!events.length){card.hidden=true;return}
-    var t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12),all=[];
+    if(!events.length){card.hidden=true;return}
+    $("upTitle").textContent=(view.y!==now.getFullYear()?view.y+"년 ":"")+(view.m+1)+"월 다가오는 행사";
+    var all=[];
     events.forEach(function(ev){
-      [now.getFullYear(),now.getFullYear()+1].forEach(function(y){
-        occurrences(ev,y).forEach(function(dt){if(dt>=t)all.push({ev:ev,dt:dt})});
-      });
+      occurrences(ev,view.y).forEach(function(dt){if(dt.getMonth()===view.m)all.push({ev:ev,dt:dt})});
     });
     all.sort(function(a,b){return a.dt-b.dt});
-    all.slice(0,5).forEach(function(o){
+    if(!all.length){
+      var em=document.createElement("li");em.className="empty";em.textContent="이 달에는 행사가 없어요.";ul.appendChild(em);
+    }
+    all.forEach(function(o){
       var li=document.createElement("li");li.className="item";
       li.innerHTML='<div class="when"><b></b><small class="meta"></small><small class="date"></small><small class="memo"></small></div><span class="dday"></span>';
       li.querySelector("b").textContent=(STK[o.ev.type]||"")+" "+o.ev.name;
@@ -395,12 +399,20 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       li.querySelector(".meta").textContent=at;if(!at)li.querySelector(".meta").hidden=true;
       li.querySelector(".date").textContent=o.dt.getFullYear()+"년 "+label(o.dt)+" · "+typeName(o.ev.type)+" · "+dateText(o.ev)+(o.ev.cal==="solar"?" · "+lunText(o.dt):"");
       li.querySelector(".memo").textContent=o.ev.memo||"";if(!o.ev.memo)li.querySelector(".memo").hidden=true;
-      li.querySelector(".dday").textContent=ddayText(o.dt);
+      var dd=ddayText(o.dt),de=li.querySelector(".dday");
+      de.textContent=dd;if(dd.charAt(1)==="+")de.classList.add("past");
       ul.appendChild(li);
     });
     card.hidden=false;
   }
 
+  function nextOcc(ev){
+    var t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12),best=null;
+    [now.getFullYear(),now.getFullYear()+1].forEach(function(y){
+      occurrences(ev,y).forEach(function(dt){if(dt>=t&&(!best||dt<best))best=dt});
+    });
+    return best;
+  }
   function renderSaved(){
     var ul=$("saved");ul.innerHTML="";
     if(!events.length){
@@ -408,10 +420,18 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     }
     events.forEach(function(ev){
       var li=document.createElement("li");li.className="item";
-      li.innerHTML='<div class="when"><b></b><small class="date"></small><small class="memo"></small></div><div class="actions"><button class="edit" type="button">수정</button><button class="del" type="button">삭제</button></div>';
+      li.innerHTML='<div class="when"><b></b><small class="meta"></small><small class="date"></small><small class="next"></small><small class="memo"></small></div><div class="actions"><button class="edit" type="button">수정</button><button class="del" type="button">삭제</button></div>';
       li.querySelector("b").textContent=(STK[ev.type]||"")+" "+ev.name;
       var yr=ev.year&&ev.type!=="jesa"?" · "+(ev.cal==="solar"?"양력 ":"음력 ")+ev.year+(ev.type==="anniv"?"년 결혼":"년생"):"";
       li.querySelector(".date").textContent=typeName(ev.type)+" · "+dateText(ev)+yr;
+      var nx=nextOcc(ev),mt=li.querySelector(".meta"),nt=li.querySelector(".next");
+      if(nx){
+        nt.textContent="다음: "+nx.getFullYear()+"년 "+label(nx)+" · "+ddayText(nx).replace("-","\u2011");
+        var at=ageText(ev,nx);
+        if(at)mt.textContent=at;
+        else if(ev.type!=="jesa"&&!ev.year){mt.textContent=(ev.type==="anniv"?"결혼한 해":"태어난 해")+"를 넣으면 "+(ev.type==="anniv"?"몇 주년":"몇 세")+"인지 나와요";mt.style.color="var(--muted)";mt.style.fontWeight="400"}
+        else mt.hidden=true;
+      }else{nt.hidden=true;mt.hidden=true}
       li.querySelector(".memo").textContent=ev.memo||"";if(!ev.memo)li.querySelector(".memo").hidden=true;
       li.querySelector(".edit").setAttribute("aria-label",ev.name+" 수정");
       li.querySelector(".edit").onclick=function(){startEdit(ev)};
@@ -438,22 +458,9 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   }
   buildDays(1);
 
-  // 표시 버튼
-  $("showBtn").onclick=function(){
-    if(!events.length){
-      $("msg").textContent="먼저 아래에서 행사를 저장해 주세요.";
-      $("name").scrollIntoView({block:"center"});
-      $("name").focus();
-      return;
-    }
-    showMarks=!showMarks;
-    this.setAttribute("aria-pressed",String(showMarks));
-    this.textContent=showMarks?"행사 표시 중 (누르면 숨김)":"저장한 행사 달력에 표시";
-    $("msg").textContent=showMarks?"저장한 행사를 양력 달력에 표시했어요.":"";
-    renderAll();
-  };
-  $("prev").onclick=function(){view.m--;if(view.m<0){view.m=11;view.y--}renderCal()};
-  $("next").onclick=function(){view.m++;if(view.m>11){view.m=0;view.y++}renderCal()};
+  // 달 넘기기: 달력과 그 달의 행사 목록을 함께 바꿈
+  $("prev").onclick=function(){view.m--;if(view.m<0){view.m=11;view.y--}renderCal();renderUpcoming()};
+  $("next").onclick=function(){view.m++;if(view.m>11){view.m=0;view.y++}renderCal();renderUpcoming()};
 
   // 저장
   var editingId=null;
@@ -506,7 +513,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     if(!edited)events.push(Object.assign({id:Date.now().toString(36)},data));
     store.set("lunar-events",events);
     endEdit();
-    $("msg").textContent=edited?"수정했어요.":"저장했어요. 위 버튼을 눌러 양력 날짜를 확인하세요.";
+    $("msg").textContent=edited?"수정했어요.":"저장했어요. 달력에 바로 표시돼요.";
     renderAll();
   };
   syncYearField();
