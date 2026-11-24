@@ -99,6 +99,11 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 .row.two{grid-template-columns:1fr 1fr}
 .evn{font-size:clamp(8px,2.4vw,10px);line-height:1.15;color:var(--accent);font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px;margin-top:1px}
 .dday.past{color:var(--muted)}
+#icsCard .hint{margin-bottom:12px}
+#icsCard .btn{width:100%}
+.fold{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.chev{color:var(--muted);font:400 14px var(--sans)}
+
 #evYear{-moz-appearance:textfield;appearance:textfield}
 #evYear::-webkit-outer-spin-button,#evYear::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .day{aspect-ratio:auto;min-height:64px;padding:2px 0}
@@ -154,6 +159,22 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       <label>메모 (선택)
         <input id="evMemo" maxlength="100" autocomplete="off">
       </label>
+      <label>며칠 전에 알려드릴까요
+        <select id="lead">
+          <option value="0">당일</option><option value="1">1일 전</option>
+          <option value="3">3일 전</option><option value="7">7일 전</option>
+        </select>
+      </label>
+      <div class="row two">
+        <label>알림 시간 (오전/오후)
+          <select id="ampm"><option value="am">오전</option><option value="pm">오후</option></select>
+        </label>
+        <label>몇 시부터
+          <select id="hour"><option value="1">1시</option><option value="2">2시</option><option value="3">3시</option><option value="4">4시</option><option value="5">5시</option><option value="6">6시</option><option value="7">7시</option><option value="8">8시</option><option value="9">9시</option><option value="10">10시</option><option value="11">11시</option><option value="12">12시</option></select>
+        </label>
+      </div>
+      <button class="btn" type="button" id="alarmBtn">알림 켜기</button>
+      <p class="msg" id="alarmMsg" role="status"></p>
       <div class="btns">
         <button class="btn fill" type="submit" id="formBtn">저장</button>
         <button class="btn" type="button" id="cancelEdit" hidden>수정 취소</button>
@@ -163,24 +184,15 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   </section>
 
   <section class="card" id="savedCard" aria-labelledby="savedTitle">
-    <h2 id="savedTitle">저장한 행사</h2>
-    <ul id="saved"></ul>
+    <h2 id="savedTitle"><button type="button" class="fold" id="savedToggle" aria-expanded="false" aria-controls="saved"><span id="savedLabel">저장한 행사</span><span class="chev" id="savedHint">펼치기</span></button></h2>
+    <ul id="saved" hidden></ul>
   </section>
 
-  <section class="card" aria-labelledby="alarmTitle">
-    <h2 id="alarmTitle">알림</h2>
-    <form id="alarmForm">
-      <label>며칠 전에 알려드릴까요
-        <select id="lead">
-          <option value="0">당일</option><option value="1">1일 전</option>
-          <option value="3">3일 전</option><option value="7">7일 전</option>
-        </select>
-      </label>
-      <button class="btn" type="submit" id="alarmBtn">알림 켜기</button>
-      <button class="btn fill" type="button" id="icsBtn">📅 캘린더 파일 받기 (폰을 닫아도 알림)</button>
-    </form>
-    <p class="msg" id="alarmMsg" role="status"></p>
-    <p class="hint">캘린더 파일을 받아 열면 앞으로 5년 치 양력 날짜가 폰 캘린더에 들어가고, 고른 날짜 오전 9시에 캘린더 앱이 알려 줘요. 같은 파일을 다시 열면 대부분의 캘린더 앱에서 중복 없이 갱신돼요.</p>
+  <section class="card" id="icsCard" aria-labelledby="icsTitle">
+    <h2 id="icsTitle">캘린더 파일</h2>
+    <p class="hint">받은 파일을 열면 앞으로 5년 치 양력 날짜가 폰 캘린더에 들어가고, 행사 저장에서 고른 날짜와 시간에 캘린더 앱이 알려 줘요. 같은 파일을 다시 열면 대부분의 캘린더 앱에서 중복 없이 갱신돼요.</p>
+    <button class="btn fill" type="button" id="icsBtn">📅 캘린더 파일 받기 (폰을 닫아도 알림)</button>
+    <p class="msg" id="icsMsg" role="status"></p>
   </section>
 
   <section class="card" aria-labelledby="iqTitle">
@@ -415,10 +427,14 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   }
   function renderSaved(){
     var ul=$("saved");ul.innerHTML="";
+    $("savedLabel").textContent="저장한 행사 ("+events.length+")";
     if(!events.length){
       var p=document.createElement("li");p.className="empty";p.textContent="아직 저장한 행사가 없어요. 위 양식에 이름과 날짜를 입력해 저장하세요.";ul.appendChild(p);return;
     }
-    events.forEach(function(ev){
+    var sorted=events.slice().sort(function(a,b){
+      return a.m-b.m||a.d-b.d||((a.cal==="solar"?0:1)-(b.cal==="solar"?0:1))||String(a.name).localeCompare(String(b.name),"ko");
+    });
+    sorted.forEach(function(ev){
       var li=document.createElement("li");li.className="item";
       li.innerHTML='<div class="when"><b></b><small class="meta"></small><small class="date"></small><small class="next"></small><small class="memo"></small></div><div class="actions"><button class="edit" type="button">수정</button><button class="del" type="button">삭제</button></div>';
       li.querySelector("b").textContent=(STK[ev.type]||"")+" "+ev.name;
@@ -445,6 +461,12 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     });
   }
   function renderAll(){renderCal();renderUpcoming();renderSaved()}
+  $("savedToggle").onclick=function(){
+    var open=this.getAttribute("aria-expanded")!=="true";
+    this.setAttribute("aria-expanded",String(open));
+    $("saved").hidden=!open;
+    $("savedHint").textContent=open?"접기":"펼치기";
+  };
 
   // 선택 목록
   for(var i=1;i<=12;i++)$("lm").add(new Option(i+"월",i));
@@ -476,6 +498,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   function endEdit(){
     editingId=null;
     $("form").reset();syncYearField();buildDays(1);
+    $("lead").value=String(store.get("lunar-lead",1));setTimeUI(savedHour());
     $("addTitle").textContent="행사 저장";
     $("formBtn").textContent="저장";
     $("cancelEdit").hidden=true;
@@ -520,7 +543,9 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 
   // 알림
   $("lead").value=String(store.get("lunar-lead",1));
+  setTimeUI(savedHour());
   $("lead").onchange=function(){store.set("lunar-lead",+$("lead").value)};
+  $("ampm").onchange=$("hour").onchange=function(){store.set("lunar-hour",alarmHour())};
 
   // 캘린더 파일(.ics): 앞으로 5년 치 양력 날짜 + 오전 9시 알림
   function icsEsc(t){return String(t).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n")}
@@ -534,10 +559,13 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   }
   function ymd8(dt){return dt.getFullYear()+pad2(dt.getMonth()+1)+pad2(dt.getDate())}
   function pad2(n){return (n<10?"0":"")+n}
+  function alarmHour(){var h=+$("hour").value%12;return $("ampm").value==="pm"?h+12:h}
+  function setTimeUI(h){h=(h==null||isNaN(h))?9:h;$("ampm").value=h>=12?"pm":"am";$("hour").value=String(h%12===0?12:h%12)}
+  function savedHour(){var h=store.get("lunar-hour",9);return typeof h==="number"?h:9}
   function buildIcs(lead){
     var t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12),L=[],count=0;
     var stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
-    var trig=lead===0?"PT9H":(lead>1?"-P"+(lead-1)+"DT15H":"-PT15H");
+    var mins=lead*1440-alarmHour()*60,trig=mins>0?"-PT"+mins+"M":(mins===0?"PT0S":"PT"+(-mins)+"M");
     L.push("BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//family lunar calendar//KO","CALSCALE:GREGORIAN","METHOD:PUBLISH");
     events.forEach(function(ev){
       for(var y=now.getFullYear();y<=now.getFullYear()+5;y++){
@@ -563,24 +591,23 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     return {text:L.map(icsFold).join("\r\n")+"\r\n",count:count};
   }
   $("icsBtn").onclick=function(){
-    if(!events.length){$("alarmMsg").textContent="먼저 위에서 행사를 저장해 주세요.";return}
+    if(!events.length){$("icsMsg").textContent="먼저 위에서 행사를 저장해 주세요.";return}
     var r=buildIcs(+$("lead").value);
-    if(!r.count){$("alarmMsg").textContent="앞으로 5년 안에 해당하는 날짜가 없어요.";return}
+    if(!r.count){$("icsMsg").textContent="앞으로 5년 안에 해당하는 날짜가 없어요.";return}
     try{
       var url=URL.createObjectURL(new Blob([r.text],{type:"text/calendar;charset=utf-8"}));
       var a=document.createElement("a");a.href=url;a.download="family-events.ics";
       document.body.appendChild(a);a.click();a.remove();
       setTimeout(function(){URL.revokeObjectURL(url)},4000);
-      $("alarmMsg").textContent="행사 "+events.length+"개, 일정 "+r.count+"건을 담은 파일을 받았어요. 받은 파일을 열어 캘린더에 추가하세요.";
-    }catch(err){console.error(err);$("alarmMsg").textContent="파일을 만들지 못했어요. 다른 브라우저로 다시 시도해 주세요."}
+      $("icsMsg").textContent="행사 "+events.length+"개, 일정 "+r.count+"건을 담은 파일을 받았어요. 받은 파일을 열어 캘린더에 추가하세요.";
+    }catch(err){console.error(err);$("icsMsg").textContent="파일을 만들지 못했어요. 다른 브라우저로 다시 시도해 주세요."}
   };
   function alarmOn(){return store.get("lunar-alarm",false)&&"Notification" in window&&Notification.permission==="granted"}
   function syncAlarmUI(){
     $("alarmBtn").textContent=alarmOn()?"알림 설정 저장 (켜짐)":"알림 켜기";
   }
-  $("alarmForm").onsubmit=function(e){
-    e.preventDefault();
-    store.set("lunar-lead",+$("lead").value);
+  $("alarmBtn").onclick=function(){
+    store.set("lunar-lead",+$("lead").value);store.set("lunar-hour",alarmHour());
     if(!("Notification" in window)){$("alarmMsg").textContent="이 브라우저는 알림을 지원하지 않아요.";return}
     Notification.requestPermission().then(function(p){
       if(p==="granted"){store.set("lunar-alarm",true);$("alarmMsg").textContent="알림을 켰어요.";checkAlarms()}
@@ -590,6 +617,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
   };
   function checkAlarms(){
     if(!alarmOn())return;
+    if(new Date().getHours()<savedHour())return;
     var lead=store.get("lunar-lead",1),done=store.get("lunar-notified",{}),n=new Date(),
         t=new Date(n.getFullYear(),n.getMonth(),n.getDate(),12);
     events.forEach(function(ev){
