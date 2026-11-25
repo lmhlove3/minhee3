@@ -4,6 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>행사 달력</title>
+<meta name="description" content="생일, 제사, 가족 행사를 양력이든 음력이든 한 번만 적어 두세요. 양력 달력에 표시하고, 음력 날짜도 작게 같이 보여 드려요.">
+<meta name="theme-color" content="#F5F4ED">
+<link rel="canonical" href="https://minhee3.vercel.app/">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23C96442'/%3E%3Crect x='11' y='15' width='42' height='38' rx='7' fill='%23fff'/%3E%3Cpath d='M11 22a7 7 0 0 1 7-7h28a7 7 0 0 1 7 7v6H11z' fill='%23F0E6DC'/%3E%3Crect x='21' y='9' width='5' height='13' rx='2.500' fill='%23fff'/%3E%3Crect x='38' y='9' width='5' height='13' rx='2.500' fill='%23fff'/%3E%3Ccircle cx='32' cy='41' r='6.500' fill='%23C96442'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,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">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="가족 행사 달력">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://minhee3.vercel.app/">
+<meta property="og:title" content="까먹어도 괜찮아요, 제가 챙겨요">
+<meta property="og:description" content="생일, 제사, 가족 행사를 양력이든 음력이든 한 번만 적어 두세요. 양력 달력에 표시하고, 음력 날짜도 작게 같이 보여 드려요.">
+<meta property="og:image" content="https://minhee3.vercel.app/og-image.png">
+<meta property="og:image:secure_url" content="https://minhee3.vercel.app/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="까먹어도 괜찮아요, 제가 챙겨요 — 가족 행사 달력 미리보기">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
