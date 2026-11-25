@@ -49,8 +49,20 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--sans);-webkit-text-size-adjust:100%}
 main{max-width:560px;margin:0 auto;padding:32px 20px 56px}
+.notes{list-style:none;margin:-4px 0 0;padding:0;display:grid;gap:10px}
+.nlink{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:inherit;text-decoration:none;transition:background .12s}
+.nlink:hover,.nlink:focus-visible{background:var(--soft)}
+.nround{flex:none;min-width:44px;text-align:center;padding:4px 10px;border-radius:999px;background:var(--soft);color:var(--accent);font:500 14px var(--sans)}
+.ntext{flex:1;min-width:0;display:grid;gap:2px}
+.notes .ntext b{display:block;font:600 16px/1.4 var(--sans);color:var(--ink)}
+.notes .ntext small{display:block;color:var(--muted);font:400 14px/1.4 var(--sans)}
+.narrow{flex:none;color:var(--muted);font-size:22px;line-height:1}
+.first{margin:0 0 16px;padding:14px 16px;border:1px dashed var(--line);border-radius:14px;display:grid;gap:10px;justify-items:start}
+.first p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+.first .btn{color:var(--ink);width:auto;min-height:44px;padding:0 18px;display:inline-flex;align-items:center;text-decoration:none}
 .ttl{word-break:keep-all}
 .ttl .w{display:inline-block;white-space:nowrap}
+.ttl .hlw{display:inline-block;white-space:nowrap}
 .ttl .ch{display:inline-block;opacity:0;transform:translateY(.5em);animation:chUp .6s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(var(--i)*.07s + .15s)}
 .ttl .hl .ch{animation:chUp .6s cubic-bezier(.2,.7,.2,1) forwards,chHl .9s ease forwards;animation-delay:calc(var(--i)*.07s + .15s),1.5s}
 @keyframes chUp{to{opacity:1;transform:none}}
@@ -92,13 +104,14 @@ li.item:first-child{border-top:0}
 .empty{color:var(--muted);font-size:15px}
 form{display:grid;gap:12px}
 label{display:grid;gap:6px;font-size:14px;color:var(--muted)}
+input,select,textarea{font-size:16px}
 input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
 .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .btn{min-height:48px;border-radius:12px;border:1px solid var(--ink);background:transparent;cursor:pointer;padding:0 16px}
 .btn.fill{background:var(--ink);color:var(--bg)}
 .del{min-height:44px;min-width:44px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
-.note{margin-top:28px;font-size:13px;color:var(--muted)}
-.hint{font-size:13px;color:var(--muted)}
+.note{margin-top:28px;font-size:13px;color:var(--muted);word-break:keep-all;line-height:1.7}
+.hint{font-size:13px;color:var(--muted);word-break:keep-all}
 :root{--holiday:#D92D20}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--holiday:#FF8A80}}
 :root[data-theme="dark"]{--holiday:#FF8A80}
@@ -129,7 +142,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 .when small.date,.when small.next{display:block}
 .is-editing{border-color:var(--accent)}
 .row.two{grid-template-columns:1fr 1fr}
-.evn{font-size:clamp(8px,2.4vw,10px);line-height:1.15;color:var(--accent);font-weight:500;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px;margin-top:1px}
+.evn{font-size:10px;line-height:1.15;color:var(--accent);font-weight:500;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;word-break:break-all;text-align:center;padding:0 1px;margin-top:1px}
 .dday.past{color:var(--muted)}
 #icsCard .hint{margin-bottom:12px}
 #icsCard .btn{width:100%}
@@ -139,15 +152,19 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
 #evYear{-moz-appearance:textfield;appearance:textfield}
 #evYear::-webkit-outer-spin-button,#evYear::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .day{aspect-ratio:auto;min-height:64px;padding:2px 0}
-.lun{font-size:clamp(8px,2.4vw,10px);line-height:1.1;color:var(--muted);font-weight:400;margin-top:1px;white-space:nowrap}
+.lun{font-size:11px;line-height:1.1;color:var(--muted);font-weight:400;margin-top:1px;white-space:nowrap}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){.primary{transition:none}}
 </style>
 </head>
 <body>
 <main>
-  <h1 class="ttl" aria-label="까먹어도 괜찮아요, 제가 챙겨요"><span class="w"><span class="ch" style="--i:0">까</span><span class="ch" style="--i:1">먹</span><span class="ch" style="--i:2">어</span><span class="ch" style="--i:3">도</span></span> <span class="w"><span class="ch" style="--i:4">괜</span><span class="ch" style="--i:5">찮</span><span class="ch" style="--i:6">아</span><span class="ch" style="--i:7">요</span><span class="ch" style="--i:8">,</span></span> <span class="w hl"><span class="ch" style="--i:9">제</span><span class="ch" style="--i:10">가</span></span> <span class="w hl"><span class="ch" style="--i:11">챙</span><span class="ch" style="--i:12">겨</span><span class="ch" style="--i:13">요</span></span></h1>
+  <h1 class="ttl" aria-label="까먹어도 괜찮아요, 제가 챙겨요"><span class="w"><span class="ch" style="--i:0">까</span><span class="ch" style="--i:1">먹</span><span class="ch" style="--i:2">어</span><span class="ch" style="--i:3">도</span></span> <span class="w"><span class="ch" style="--i:4">괜</span><span class="ch" style="--i:5">찮</span><span class="ch" style="--i:6">아</span><span class="ch" style="--i:7">요</span><span class="ch" style="--i:8">,</span></span> <span class="hlw"><span class="w hl"><span class="ch" style="--i:9">제</span><span class="ch" style="--i:10">가</span></span> <span class="w hl"><span class="ch" style="--i:11">챙</span></span><span class="ch" style="--i:12">겨</span><span class="ch" style="--i:13">요</span></span></h1>
   <p class="lead">생일, 제사, 가족 행사를 양력이든 음력이든 한 번만 적어 두세요. 양력 달력에 표시하고, 음력 날짜도 작게 같이 보여 드려요.</p>
+  <div class="first" id="firstHint">
+    <p>아직 저장한 행사가 없어요. 아래에서 행사를 저장하면 달력에 표시돼요.</p>
+    <a class="btn" href="#formCard">행사 저장하러 가기</a>
+  </div>
 
   <section class="card" aria-labelledby="calTitle">
     <p class="wx" id="wx" hidden></p>
@@ -227,6 +244,20 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
     <p class="msg" id="icsMsg" role="status"></p>
   </section>
 
+  <section class="card" id="notesCard" aria-labelledby="notesTitle">
+    <h2 id="notesTitle">작업 노트</h2>
+    <p class="hint">이 과정에서 만든 것들이에요.</p>
+    <ul class="notes">
+      <li>
+        <a class="nlink" href="https://minhee3.vercel.app/" target="_blank" rel="noopener">
+          <span class="nround">1회</span>
+          <span class="ntext"><b>가족 행사 달력</b><small>가족 행사를 양력·음력으로 한눈에 보는 달력</small></span>
+          <span class="narrow" aria-hidden="true">›</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
   <section class="card" aria-labelledby="iqTitle">
     <h2 id="iqTitle">달력에 행사 추가 부탁해!</h2>
     <form id="iqForm">
@@ -254,10 +285,10 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       <button class="btn fill" type="submit" id="iqBtn">문의 보내기</button>
     </form>
     <p class="msg" id="iqMsg" role="status"></p>
-    <p class="hint">입력한 이름과 생일은 작업 문의를 확인하기 위해 서버에 저장돼요.</p>
+    <p class="hint">입력한 이름과 생일은 행사 추가 요청을 확인하기 위해 서버에 저장돼요.</p>
   </section>
 
-  <p class="note">달력 칸의 음력 날짜는 브라우저에 들어 있는 달력으로 계산하며, 음력 행사는 윤달을 포함하지 않아요. 양력 2월 29일 행사는 평년에는 2월 28일에 표시돼요. 공휴일은 2026년 기준 규정으로 계산하고 대체공휴일도 반영하지만, 정부가 새로 지정하는 임시공휴일은 빠질 수 있어요. 저장한 행사는 이 기기의 브라우저에만 보관돼요. 위 ‘알림 켜기’는 이 페이지가 열려 있는 동안만 울리고, 페이지를 닫아도 울리는 알림은 ‘캘린더 파일 받기’로 폰 캘린더에 넣어 두세요.</p>
+  <p class="note">달력의 음력 날짜는 브라우저가 계산하고, 윤달 행사는 넣을 수 없어요. 공휴일은 2026년 기준 규정이라 임시공휴일은 빠질 수 있어요. 저장한 행사는 이 기기의 브라우저에만 보관돼요. ‘알림 켜기’는 페이지가 열려 있을 때만 울리니, 닫아도 울리는 알림은 ‘캘린더 파일 받기’로 폰 캘린더에 넣어 두세요.</p>
 </main>
 
 <script>
@@ -496,7 +527,7 @@ input,select{width:100%;min-height:48px;padding:0 12px;border:1px solid var(--li
       ul.appendChild(li);
     });
   }
-  function renderAll(){renderCal();renderUpcoming();renderSaved()}
+  function renderAll(){renderCal();renderUpcoming();renderSaved();$("firstHint").hidden=events.length>0}
   $("savedToggle").onclick=function(){
     var open=this.getAttribute("aria-expanded")!=="true";
     this.setAttribute("aria-expanded",String(open));
